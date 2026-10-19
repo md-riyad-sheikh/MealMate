@@ -1,0 +1,1095 @@
+{% extends 'app_base.html' %}
+
+{% block title %}
+Find Food | MealMate
+{% endblock %}
+
+{% block find_food_nav_class %}
+dashboard-active-link
+{% endblock %}
+
+
+{% block content %}
+
+<style>
+
+/* =========================================================
+   SEARCH + FILTER
+========================================================= */
+
+.food-search-section {
+    margin-top: 35px;
+}
+
+.food-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #ffffff;
+    border: 1px solid #dfe8e1;
+    border-radius: 16px;
+    padding: 10px;
+    box-shadow: 0 8px 26px rgba(24, 68, 43, 0.05);
+}
+
+.food-search-input-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-left: 8px;
+}
+
+.food-search-input-wrap i {
+    color: #168447;
+    font-size: 18px;
+}
+
+.food-search-input {
+    width: 100%;
+    border: 0;
+    outline: none;
+    background: transparent;
+    padding: 10px 0;
+    color: #152b3c;
+    font-size: 16px;
+    font-family: inherit;
+}
+
+.filter-toggle-button,
+.food-search-button {
+    border: 0;
+    border-radius: 11px;
+    padding: 13px 20px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.filter-toggle-button {
+    background: #eef7ef;
+    color: #168447;
+    border: 1px solid #cfe4d3;
+}
+
+.filter-toggle-button:hover {
+    background: #e1f1e4;
+}
+
+.food-search-button {
+    background: #168447;
+    color: white;
+}
+
+.food-search-button:hover {
+    background: #116d3a;
+}
+
+.filter-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 21px;
+    height: 21px;
+    margin-left: 5px;
+    padding: 0 6px;
+    border-radius: 20px;
+    background: #168447;
+    color: white;
+    font-size: 11px;
+}
+
+.filter-panel {
+    display: none;
+    margin-top: 12px;
+    padding: 24px;
+    background: #ffffff;
+    border: 1px solid #dfe8e1;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(24, 68, 43, 0.05);
+}
+
+.filter-panel.open {
+    display: block;
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.filter-field label {
+    color: #253942;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.filter-select {
+    width: 100%;
+    padding: 12px 12px;
+    border: 1px solid #d6e1d8;
+    border-radius: 9px;
+    background: #fafcfb;
+    color: #152b3c;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+}
+
+.filter-select:focus {
+    border-color: #168447;
+    box-shadow: 0 0 0 3px rgba(22, 132, 71, 0.07);
+}
+
+.filter-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.apply-filter-button {
+    border: 0;
+    border-radius: 9px;
+    padding: 11px 18px;
+    background: #168447;
+    color: #ffffff;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.clear-filter-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    border: 1px solid #d6e1d8;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #526159;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.active-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.active-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 11px;
+    border-radius: 30px;
+    background: #e8f5e9;
+    color: #168447;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   FOOD RESULTS
+========================================================= */
+
+.results-heading-row {
+    margin-top: 40px;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.available-count {
+    padding: 9px 15px;
+    border-radius: 30px;
+    background: #e8f5e9;
+    color: #168447;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.food-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 25px;
+}
+
+.food-card {
+    background: #ffffff;
+    border: 1px solid #dfe8e1;
+    border-radius: 18px;
+    padding: 25px;
+    box-shadow: 0 8px 28px rgba(24, 68, 43, 0.04);
+}
+
+.food-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 18px;
+}
+
+.food-status {
+    background: #e3f4e8;
+    color: #168447;
+    padding: 6px 12px;
+    border-radius: 30px;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.food-quantity {
+    color: #67787f;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.food-icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    margin-bottom: 16px;
+    border-radius: 13px;
+    background: #eef7ef;
+    color: #168447;
+    font-size: 20px;
+}
+
+.food-card h3 {
+    margin: 0 0 7px;
+    color: #102536;
+    font-size: 22px;
+}
+
+.food-business {
+    margin-bottom: 14px;
+    color: #168447;
+    font-weight: 800;
+}
+
+.food-description {
+    min-height: 44px;
+    color: #68787f;
+    line-height: 1.55;
+    font-size: 14px;
+}
+
+.food-meta {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid #edf1ee;
+    display: grid;
+    gap: 10px;
+}
+
+.food-meta-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    color: #65757c;
+    font-size: 13px;
+}
+
+.food-meta-item i {
+    width: 15px;
+    margin-top: 2px;
+    color: #168447;
+}
+
+.food-card-actions {
+    display: flex;
+    gap: 9px;
+    margin-top: 20px;
+}
+
+.food-view-button {
+    flex: 1;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+    padding: 12px;
+    border-radius: 9px;
+    background: #168447;
+    color: #ffffff;
+    text-decoration: none;
+    font-weight: 800;
+}
+
+.food-view-button:hover {
+    background: #116d3a;
+}
+
+.food-map-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    border: 1px solid #cfe3d2;
+    border-radius: 9px;
+    background: #f1f8f2;
+    color: #168447;
+    text-decoration: none;
+}
+
+.no-food-message {
+    grid-column: 1 / -1;
+    padding: 70px 25px;
+    border: 1px dashed #cad8cd;
+    border-radius: 18px;
+    background: #ffffff;
+    text-align: center;
+}
+
+.no-food-message i {
+    color: #168447;
+    font-size: 32px;
+    margin-bottom: 15px;
+}
+
+.no-food-message h3 {
+    margin-bottom: 8px;
+    color: #102536;
+}
+
+.no-food-message p {
+    color: #6d7c83;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1000px) {
+
+    .filter-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .food-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+@media (max-width: 650px) {
+
+    .food-search-bar {
+        flex-wrap: wrap;
+    }
+
+    .food-search-input-wrap {
+        width: 100%;
+        flex-basis: 100%;
+    }
+
+    .filter-toggle-button,
+    .food-search-button {
+        flex: 1;
+    }
+
+    .filter-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .filter-actions {
+        flex-direction: column;
+    }
+
+    .apply-filter-button,
+    .clear-filter-button {
+        width: 100%;
+    }
+
+    .results-heading-row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .food-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+</style>
+
+
+<main class="user-dashboard">
+
+
+    <section class="dashboard-welcome">
+
+        <p class="dashboard-label">
+            MEALMATE
+        </p>
+
+        <h1>
+            Welcome, {{ current_user.full_name }}
+        </h1>
+
+        <p>
+            Find surplus food shared by restaurants
+            and businesses in your community.
+        </p>
+
+    </section>
+
+
+    <!-- ==================================================
+         SEARCH AND FILTER
+    =================================================== -->
+
+    <section class="food-search-section">
+
+
+        <form
+            method="GET"
+            action="{% url 'dashboard' %}"
+            id="foodSearchForm"
+        >
+
+
+            <div class="food-search-bar">
+
+
+                <div class="food-search-input-wrap">
+
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    <input
+                        type="text"
+                        name="q"
+                        value="{{ query }}"
+                        class="food-search-input"
+                        placeholder="Search food, business or pickup area"
+                        autocomplete="off"
+                    >
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="filter-toggle-button"
+                    id="filterToggle"
+                >
+
+                    <i class="fa-solid fa-sliders"></i>
+
+                    Filter
+
+                    {% if active_filter_count %}
+
+                        <span class="filter-count-badge">
+                            {{ active_filter_count }}
+                        </span>
+
+                    {% endif %}
+
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="food-search-button"
+                >
+
+                    Search
+
+                </button>
+
+
+            </div>
+
+
+            <!-- FILTER PANEL -->
+
+            <div
+                class="filter-panel {% if active_filter_count %}open{% endif %}"
+                id="filterPanel"
+            >
+
+
+                <div class="filter-grid">
+
+
+                    <!-- AREA -->
+
+                    <div class="filter-field">
+
+                        <label for="areaFilter">
+
+                            <i class="fa-solid fa-location-dot"></i>
+
+                            Area
+
+                        </label>
+
+
+                        <select
+                            name="area"
+                            id="areaFilter"
+                            class="filter-select"
+                        >
+
+                            <option value="">
+                                All Areas
+                            </option>
+
+
+                            {% for area in areas %}
+
+                                <option
+                                    value="{{ area }}"
+                                    {% if selected_area == area %}selected{% endif %}
+                                >
+                                    {{ area }}
+                                </option>
+
+                            {% endfor %}
+
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- FOOD TYPE -->
+
+                    <div class="filter-field">
+
+                        <label for="foodTypeFilter">
+
+                            <i class="fa-solid fa-bowl-food"></i>
+
+                            Food Type
+
+                        </label>
+
+
+                        <select
+                            name="food_type"
+                            id="foodTypeFilter"
+                            class="filter-select"
+                        >
+
+                            <option value="">
+                                All Food
+                            </option>
+
+
+                            {% for value, label in food_type_labels.items %}
+
+                                <option
+                                    value="{{ value }}"
+                                    {% if selected_food_type == value %}selected{% endif %}
+                                >
+                                    {{ label }}
+                                </option>
+
+                            {% endfor %}
+
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- PICKUP TIME -->
+
+                    <div class="filter-field">
+
+                        <label for="pickupFilter">
+
+                            <i class="fa-solid fa-clock"></i>
+
+                            Pickup Time
+
+                        </label>
+
+
+                        <select
+                            name="pickup"
+                            id="pickupFilter"
+                            class="filter-select"
+                        >
+
+                            <option value="">
+                                Any Time
+                            </option>
+
+                            <option
+                                value="today"
+                                {% if selected_pickup == "today" %}selected{% endif %}
+                            >
+                                Today
+                            </option>
+
+                            <option
+                                value="tomorrow"
+                                {% if selected_pickup == "tomorrow" %}selected{% endif %}
+                            >
+                                Tomorrow
+                            </option>
+
+                            <option
+                                value="morning"
+                                {% if selected_pickup == "morning" %}selected{% endif %}
+                            >
+                                Morning
+                            </option>
+
+                            <option
+                                value="afternoon"
+                                {% if selected_pickup == "afternoon" %}selected{% endif %}
+                            >
+                                Afternoon
+                            </option>
+
+                            <option
+                                value="evening"
+                                {% if selected_pickup == "evening" %}selected{% endif %}
+                            >
+                                Evening
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- BUSINESS -->
+
+                    <div class="filter-field">
+
+                        <label for="businessFilter">
+
+                            <i class="fa-solid fa-store"></i>
+
+                            Business
+
+                        </label>
+
+
+                        <select
+                            name="business"
+                            id="businessFilter"
+                            class="filter-select"
+                        >
+
+                            <option value="">
+                                All Businesses
+                            </option>
+
+
+                            {% for business in businesses %}
+
+                                <option
+                                    value="{{ business.id }}"
+                                    {% if selected_business == business.id|stringformat:"s" %}selected{% endif %}
+                                >
+                                    {{ business.full_name }}
+                                </option>
+
+                            {% endfor %}
+
+
+                        </select>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="filter-actions">
+
+
+                    <a
+                        href="{% url 'dashboard' %}"
+                        class="clear-filter-button"
+                    >
+
+                        <i class="fa-solid fa-xmark"></i>
+
+                        Clear All
+
+                    </a>
+
+
+                    <button
+                        type="submit"
+                        class="apply-filter-button"
+                    >
+
+                        <i class="fa-solid fa-check"></i>
+
+                        Apply Filters
+
+                    </button>
+
+
+                </div>
+
+
+            </div>
+
+
+        </form>
+
+
+        <!-- ACTIVE FILTERS -->
+
+        {% if query or active_filter_count %}
+
+
+            <div class="active-filter-row">
+
+
+                {% if query %}
+
+                    <span class="active-filter-chip">
+
+                        <i class="fa-solid fa-magnifying-glass"></i>
+
+                        Search: {{ query }}
+
+                    </span>
+
+                {% endif %}
+
+
+                {% if selected_area %}
+
+                    <span class="active-filter-chip">
+
+                        <i class="fa-solid fa-location-dot"></i>
+
+                        {{ selected_area }}
+
+                    </span>
+
+                {% endif %}
+
+
+                {% if selected_food_type %}
+
+                    <span class="active-filter-chip">
+
+                        <i class="fa-solid fa-bowl-food"></i>
+
+                        Food filter active
+
+                    </span>
+
+                {% endif %}
+
+
+                {% if selected_pickup %}
+
+                    <span class="active-filter-chip">
+
+                        <i class="fa-solid fa-clock"></i>
+
+                        {{ selected_pickup|title }}
+
+                    </span>
+
+                {% endif %}
+
+
+                {% if selected_business %}
+
+                    <span class="active-filter-chip">
+
+                        <i class="fa-solid fa-store"></i>
+
+                        Business filter active
+
+                    </span>
+
+                {% endif %}
+
+
+            </div>
+
+
+        {% endif %}
+
+
+    </section>
+
+
+    <!-- ==================================================
+         RESULTS
+    =================================================== -->
+
+    <section>
+
+
+        <div class="results-heading-row">
+
+
+            <div>
+
+                <p class="dashboard-label">
+                    AVAILABLE NOW
+                </p>
+
+                <h2>
+                    Find Food
+                </h2>
+
+            </div>
+
+
+            <span class="available-count">
+
+                {{ available_count }} available
+
+            </span>
+
+
+        </div>
+
+
+        <div class="food-grid">
+
+
+            {% for food in food_posts %}
+
+
+                <article class="food-card">
+
+
+                    <div class="food-card-top">
+
+
+                        <span class="food-status">
+
+                            Available
+
+                        </span>
+
+
+                        <span class="food-quantity">
+
+                            {{ food.quantity }} left
+
+                        </span>
+
+
+                    </div>
+
+
+                    <div class="food-icon-box">
+
+                        <i class="fa-solid fa-bowl-food"></i>
+
+                    </div>
+
+
+                    <h3>
+                        {{ food.food_name }}
+                    </h3>
+
+
+                    <div class="food-business">
+
+                        <i class="fa-solid fa-store"></i>
+
+                        {{ food.business_name }}
+
+                    </div>
+
+
+                    {% if food.description %}
+
+                        <p class="food-description">
+
+                            {{ food.description|truncatechars:110 }}
+
+                        </p>
+
+                    {% endif %}
+
+
+                    <div class="food-meta">
+
+
+                        <div class="food-meta-item">
+
+                            <i class="fa-solid fa-location-dot"></i>
+
+                            <span>
+                                {{ food.pickup_address }}
+                            </span>
+
+                        </div>
+
+
+                        <div class="food-meta-item">
+
+                            <i class="fa-solid fa-clock"></i>
+
+                            <span>
+
+                                {{ food.pickup_start|date:"d M Y, H:i" }}
+
+                                –
+
+                                {{ food.pickup_end|date:"H:i" }}
+
+                            </span>
+
+                        </div>
+
+
+                    </div>
+
+
+                    <div class="food-card-actions">
+
+
+                        <a
+                            href="{% url 'food_detail' food.id %}"
+                            class="food-view-button"
+                        >
+
+                            View & Reserve
+
+                            <i class="fa-solid fa-arrow-right"></i>
+
+                        </a>
+
+
+                        <a
+                            href="https://www.google.com/maps/dir/?api=1&destination={{ food.pickup_address|urlencode }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="food-map-button"
+                            title="Open in Google Maps"
+                        >
+
+                            <i class="fa-solid fa-diamond-turn-right"></i>
+
+                        </a>
+
+
+                    </div>
+
+
+                </article>
+
+
+            {% empty %}
+
+
+                <div class="no-food-message">
+
+
+                    <i class="fa-solid fa-basket-shopping"></i>
+
+
+                    <h3>
+                        No matching food found
+                    </h3>
+
+
+                    <p>
+
+                        Try another search or clear your filters.
+
+                    </p>
+
+
+                    <div style="margin-top: 20px;">
+
+                        <a
+                            href="{% url 'dashboard' %}"
+                            class="clear-filter-button"
+                        >
+
+                            Clear Search & Filters
+
+                        </a>
+
+                    </div>
+
+
+                </div>
+
+
+            {% endfor %}
+
+
+        </div>
+
+
+    </section>
+
+
+</main>
+
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const filterToggle =
+            document.getElementById(
+                "filterToggle"
+            );
+
+        const filterPanel =
+            document.getElementById(
+                "filterPanel"
+            );
+
+
+        if (
+            filterToggle
+            &&
+            filterPanel
+        ) {
+
+            filterToggle.addEventListener(
+                "click",
+                function () {
+
+                    filterPanel.classList.toggle(
+                        "open"
+                    );
+
+                }
+            );
+
+        }
+
+    }
+);
+
+</script>
+
+
+{% endblock %}

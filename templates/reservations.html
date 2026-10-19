@@ -1,0 +1,342 @@
+{% extends 'app_base.html' %}
+
+{% block title %}
+My Reservations | MealMate
+{% endblock %}
+
+{% block reservations_nav_class %}
+dashboard-active-link
+{% endblock %}
+
+
+{% block content %}
+
+
+<style>
+
+.pickup-code-box {
+    margin-top: 20px;
+    max-width: 420px;
+    padding: 18px 20px;
+    border: 1px solid #bcdabd;
+    border-radius: 14px;
+    background: #f1f9ef;
+}
+
+.pickup-code-label {
+    display: block;
+    margin-bottom: 6px;
+    color: #526159;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.pickup-code-value {
+    display: block;
+    color: #247b38;
+    font-size: 29px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    font-family: monospace;
+}
+
+.pickup-code-help {
+    display: block;
+    margin-top: 8px;
+    color: #66756d;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.pickup-code-used {
+    margin-top: 16px;
+    color: #247b38;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+</style>
+
+
+<main class="user-dashboard">
+
+
+    <section class="dashboard-welcome">
+
+        <p class="dashboard-label">
+            YOUR COLLECTIONS
+        </p>
+
+        <h1>
+            My Reservations
+        </h1>
+
+        <p>
+            Keep track of your reservations,
+            collection codes and directions.
+        </p>
+
+    </section>
+
+
+    <div class="reservation-list">
+
+
+        {% for reservation in reservations %}
+
+
+            <article class="reservation-card">
+
+
+                <div class="reservation-main">
+
+
+                    <div
+                        class="reservation-status status-{{ reservation.status }}"
+                    >
+                        {{ reservation.status|title }}
+                    </div>
+
+
+                    {% if reservation.food %}
+
+
+                        <h2>
+                            {{ reservation.food.food_name }}
+                        </h2>
+
+
+                        <p class="food-business">
+
+                            <i class="fa-solid fa-store"></i>
+
+                            {{ reservation.business_name }}
+
+                        </p>
+
+
+                        <div class="reservation-meta">
+
+
+                            <span>
+
+                                <i class="fa-solid fa-location-dot"></i>
+
+                                {{ reservation.food.pickup_address }}
+
+                            </span>
+
+
+                            <span>
+
+                                <i class="fa-solid fa-clock"></i>
+
+                                {{ reservation.food.pickup_start|date:"d M Y, H:i" }}
+
+                                –
+
+                                {{ reservation.food.pickup_end|date:"H:i" }}
+
+                            </span>
+
+
+                            <span>
+
+                                <i class="fa-solid fa-calendar-check"></i>
+
+                                Reserved
+
+                                {{ reservation.reserved_at|date:"d M Y, H:i" }}
+
+                            </span>
+
+
+                        </div>
+
+
+                        {% if reservation.status == 'reserved' %}
+
+
+                            <div class="pickup-code-box">
+
+                                <span class="pickup-code-label">
+
+                                    <i class="fa-solid fa-key"></i>
+
+                                    Your Pickup Code
+
+                                </span>
+
+
+                                <strong class="pickup-code-value">
+
+                                    {{ reservation.pickup_code }}
+
+                                </strong>
+
+
+                                <span class="pickup-code-help">
+
+                                    Show or tell this code to the
+                                    business when you collect your food.
+
+                                    The business must enter the correct
+                                    code before MealMate marks the food
+                                    as collected.
+
+                                </span>
+
+                            </div>
+
+
+                        {% elif reservation.status == 'collected' %}
+
+
+                            <div class="pickup-code-used">
+
+                                <i class="fa-solid fa-circle-check"></i>
+
+                                Collection confirmed
+
+                                {% if reservation.collected_at %}
+
+                                    on
+
+                                    {{ reservation.collected_at|date:"d M Y, H:i" }}
+
+                                {% endif %}
+
+                            </div>
+
+
+                        {% endif %}
+
+
+                    {% else %}
+
+
+                        <h2>
+                            Food listing unavailable
+                        </h2>
+
+
+                    {% endif %}
+
+
+                </div>
+
+
+                <div class="reservation-actions">
+
+
+                    {% if reservation.food %}
+
+
+                        <a
+                            href="https://www.google.com/maps/dir/?api=1&destination={{ reservation.food.pickup_address|urlencode }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="maps-button"
+                        >
+
+                            <i class="fa-solid fa-diamond-turn-right"></i>
+
+                            Directions
+
+                        </a>
+
+
+                        <a
+                            href="{% url 'food_detail' reservation.food.id %}"
+                            class="secondary-app-button"
+                        >
+
+                            View Food
+
+                        </a>
+
+
+                    {% endif %}
+
+
+                    {% if reservation.status == 'reserved' %}
+
+
+                        <form
+                            method="POST"
+                            action="{% url 'cancel_reservation' reservation.id %}"
+                            onsubmit="return confirm('Cancel this reservation?');"
+                        >
+
+                            {% csrf_token %}
+
+
+                            <button
+                                class="danger-button"
+                                type="submit"
+                            >
+
+                                Cancel Reservation
+
+                            </button>
+
+
+                        </form>
+
+
+                    {% endif %}
+
+
+                </div>
+
+
+            </article>
+
+
+        {% empty %}
+
+
+            <div class="no-food-message">
+
+
+                <i class="fa-solid fa-bag-shopping"></i>
+
+
+                <h3>
+                    No reservations yet
+                </h3>
+
+
+                <p>
+
+                    Reserve food from the Find Food
+                    dashboard and it will appear here.
+
+                </p>
+
+
+                <a
+                    href="{% url 'dashboard' %}"
+                    class="food-view-button inline-button"
+                >
+
+                    Find Food
+
+                </a>
+
+
+            </div>
+
+
+        {% endfor %}
+
+
+    </div>
+
+
+</main>
+
+
+{% endblock %}
